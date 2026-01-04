@@ -1,7 +1,7 @@
 """Tests for core converters."""
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from mdconverter.core.base import ConversionResult, ConversionStatus
 from mdconverter.core.gemini import GeminiConverter
