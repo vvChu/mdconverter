@@ -133,7 +133,8 @@ class LlamaParseConverter(BaseConverter):
             return None
 
         result = response.json()
-        return result.get("id")
+        job_id: str | None = result.get("id")
+        return job_id
 
     def _wait_for_result(self, job_id: str, max_wait: int = 300) -> str | None:
         """Wait for processing to complete and return markdown content."""
@@ -161,7 +162,8 @@ class LlamaParseConverter(BaseConverter):
                     headers=headers,
                 )
                 if result_response.status_code == 200:
-                    return result_response.json().get("markdown", "")
+                    markdown: str = result_response.json().get("markdown", "")
+                    return markdown
                 return None
 
             elif status == "ERROR":

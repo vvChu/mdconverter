@@ -13,7 +13,7 @@ from rich.table import Table
 
 from mdconverter import __version__
 from mdconverter.config import settings
-from mdconverter.core.base import ConversionResult, ConversionStatus
+from mdconverter.core.base import BaseConverter, ConversionResult, ConversionStatus
 
 app = typer.Typer(
     name="mdconvert",
@@ -128,6 +128,7 @@ def convert(
             progress.update(task, description=f"Converting {file.name}...")
 
             # Auto-select converter based on file type and tool preference
+            converter: BaseConverter
             if tool == "pandoc" or (
                 tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
             ):

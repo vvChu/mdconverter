@@ -155,7 +155,7 @@ START CONVERSION NOW:"""
             if candidates:
                 parts = candidates[0].get("content", {}).get("parts", [])
                 if parts:
-                    return parts[0].get("text", "")
+                    return str(parts[0].get("text", ""))
         except (KeyError, IndexError):
             pass
         return ""
