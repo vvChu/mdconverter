@@ -6,7 +6,6 @@ Uses LlamaCloud API for high-quality parsing of scanned documents.
 
 import time
 from pathlib import Path
-from typing import Optional
 
 import httpx
 
@@ -21,8 +20,8 @@ class LlamaParseConverter(BaseConverter):
 
     def __init__(
         self,
-        output_dir: Optional[Path] = None,
-        api_key: Optional[str] = None,
+        output_dir: Path | None = None,
+        api_key: str | None = None,
     ) -> None:
         """Initialize LlamaParse converter."""
         super().__init__(output_dir)
@@ -110,7 +109,7 @@ class LlamaParseConverter(BaseConverter):
                 error_message=str(e),
             )
 
-    def _upload_file(self, file_path: Path) -> Optional[str]:
+    def _upload_file(self, file_path: Path) -> str | None:
         """Upload file to LlamaParse API and return job ID."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -136,7 +135,7 @@ class LlamaParseConverter(BaseConverter):
         result = response.json()
         return result.get("id")
 
-    def _wait_for_result(self, job_id: str, max_wait: int = 300) -> Optional[str]:
+    def _wait_for_result(self, job_id: str, max_wait: int = 300) -> str | None:
         """Wait for processing to complete and return markdown content."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",

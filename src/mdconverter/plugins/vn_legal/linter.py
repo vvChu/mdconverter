@@ -7,7 +7,6 @@ Custom lint rules for Vietnamese legal documents (VN001-VN004).
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
 
 from mdconverter.plugins.vn_legal.detector import is_legal_document
 
@@ -26,7 +25,7 @@ class LintIssue:
 class VNLegalLinter:
     """Linter for Vietnamese legal documents."""
 
-    def lint_file(self, file_path: Path) -> List[LintIssue]:
+    def lint_file(self, file_path: Path) -> list[LintIssue]:
         """
         Lint a single file for Vietnamese legal document issues.
 
@@ -45,7 +44,7 @@ class VNLegalLinter:
             return []  # Only lint legal documents
 
         lines = content.splitlines()
-        issues: List[LintIssue] = []
+        issues: list[LintIssue] = []
 
         issues.extend(self._check_vn001_merged_items(file_path, lines))
         issues.extend(self._check_vn002_numbering_reset(file_path, content))
@@ -54,9 +53,9 @@ class VNLegalLinter:
 
         return issues
 
-    def _check_vn001_merged_items(self, file_path: Path, lines: List[str]) -> List[LintIssue]:
+    def _check_vn001_merged_items(self, file_path: Path, lines: list[str]) -> list[LintIssue]:
         """VN001: Detect merged list items (a, b, c on same line)."""
-        issues: List[LintIssue] = []
+        issues: list[LintIssue] = []
         pattern = re.compile(r"^[a-d]\).*\s+[b-e]\)")
 
         for i, line in enumerate(lines, 1):
@@ -72,9 +71,9 @@ class VNLegalLinter:
 
         return issues
 
-    def _check_vn002_numbering_reset(self, file_path: Path, content: str) -> List[LintIssue]:
+    def _check_vn002_numbering_reset(self, file_path: Path, content: str) -> list[LintIssue]:
         """VN002: Detect suspicious numbering resets."""
-        issues: List[LintIssue] = []
+        issues: list[LintIssue] = []
 
         count_1 = len(re.findall(r"^1\.\s", content, re.MULTILINE))
         count_2 = len(re.findall(r"^2\.\s", content, re.MULTILINE))
@@ -91,9 +90,9 @@ class VNLegalLinter:
 
         return issues
 
-    def _check_vn003_dieu_spacing(self, file_path: Path, lines: List[str]) -> List[LintIssue]:
+    def _check_vn003_dieu_spacing(self, file_path: Path, lines: list[str]) -> list[LintIssue]:
         """VN003: Check for missing blank line before 'Điều' headers."""
-        issues: List[LintIssue] = []
+        issues: list[LintIssue] = []
         pattern = re.compile(r"^###\s+Điều\s+\d+")
 
         for i, line in enumerate(lines):
@@ -110,9 +109,9 @@ class VNLegalLinter:
 
         return issues
 
-    def _check_vn004_diem_format(self, file_path: Path, lines: List[str]) -> List[LintIssue]:
+    def _check_vn004_diem_format(self, file_path: Path, lines: list[str]) -> list[LintIssue]:
         """VN004: Check for incorrect 'Điểm' format."""
-        issues: List[LintIssue] = []
+        issues: list[LintIssue] = []
         pattern = re.compile(r"^-\s*[a-d]\)")
 
         for i, line in enumerate(lines, 1):
@@ -128,9 +127,9 @@ class VNLegalLinter:
 
         return issues
 
-    def lint_directory(self, directory: Path) -> List[LintIssue]:
+    def lint_directory(self, directory: Path) -> list[LintIssue]:
         """Lint all Markdown files in a directory."""
-        all_issues: List[LintIssue] = []
+        all_issues: list[LintIssue] = []
 
         for md_file in directory.rglob("*.md"):
             if "legacy" in str(md_file) or "node_modules" in str(md_file):

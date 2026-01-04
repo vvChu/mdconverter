@@ -5,7 +5,6 @@ Post-processing rules specifically for Vietnamese legal documents.
 """
 
 import re
-from typing import Dict, List
 
 
 class VNLegalProcessor:
@@ -13,7 +12,7 @@ class VNLegalProcessor:
 
     def __init__(self) -> None:
         """Initialize processor with rule counters."""
-        self.fixes: Dict[str, int] = {}
+        self.fixes: dict[str, int] = {}
 
     def process(self, content: str) -> str:
         """
@@ -99,6 +98,6 @@ class VNLegalProcessor:
 
         return content
 
-    def get_fix_summary(self) -> Dict[str, int]:
+    def get_fix_summary(self) -> dict[str, int]:
         """Get summary of fixes applied."""
         return self.fixes.copy()

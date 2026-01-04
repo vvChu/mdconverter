@@ -5,10 +5,10 @@ Identifies documents that contain Vietnamese legal terminology and structure.
 """
 
 import re
-from typing import List, Pattern
+from re import Pattern
 
 # Compiled patterns for performance
-LEGAL_PATTERNS: List[Pattern[str]] = [
+LEGAL_PATTERNS: list[Pattern[str]] = [
     re.compile(r"Điều\s+\d+", re.IGNORECASE),
     re.compile(r"Chương\s+[IVXLC]+", re.IGNORECASE),
     re.compile(r"Mục\s+\d+", re.IGNORECASE),

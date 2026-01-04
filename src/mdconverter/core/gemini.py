@@ -7,16 +7,15 @@ Supports PDF, DOCX, images, and other document formats.
 import base64
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import httpx
 
 from mdconverter.config import settings
 from mdconverter.core.base import BaseConverter, ConversionResult, ConversionStatus
 
-
 # Supported MIME types
-MIME_TYPES: Dict[str, str] = {
+MIME_TYPES: dict[str, str] = {
     ".pdf": "application/pdf",
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".doc": "application/msword",
@@ -39,9 +38,9 @@ class GeminiConverter(BaseConverter):
 
     def __init__(
         self,
-        output_dir: Optional[Path] = None,
-        proxy_url: Optional[str] = None,
-        models: Optional[List[str]] = None,
+        output_dir: Path | None = None,
+        proxy_url: str | None = None,
+        models: list[str] | None = None,
     ) -> None:
         """Initialize Gemini converter."""
         super().__init__(output_dir)
@@ -89,7 +88,7 @@ class GeminiConverter(BaseConverter):
                         quality_score=self._calculate_quality(final_content),
                         duration_seconds=time.time() - start_time,
                     )
-            except Exception as e:
+            except Exception:
                 continue  # Try next model
 
         return ConversionResult(
@@ -149,7 +148,7 @@ RULES:
 
 START CONVERSION NOW:"""
 
-    def _extract_content(self, response_data: Dict[str, Any]) -> str:
+    def _extract_content(self, response_data: dict[str, Any]) -> str:
         """Extract text content from Gemini response."""
         try:
             candidates = response_data.get("candidates", [])

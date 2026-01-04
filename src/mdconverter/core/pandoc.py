@@ -7,7 +7,6 @@ Uses Pandoc as a subprocess for reliable conversion.
 import subprocess
 import time
 from pathlib import Path
-from typing import Optional
 
 from mdconverter.core.base import BaseConverter, ConversionResult, ConversionStatus
 
@@ -17,10 +16,10 @@ class PandocConverter(BaseConverter):
 
     SUPPORTED_EXTENSIONS = {".docx", ".doc", ".html", ".htm", ".rtf", ".odt", ".epub"}
 
-    def __init__(self, output_dir: Optional[Path] = None) -> None:
+    def __init__(self, output_dir: Path | None = None) -> None:
         """Initialize Pandoc converter."""
         super().__init__(output_dir)
-        self._pandoc_available: Optional[bool] = None
+        self._pandoc_available: bool | None = None
 
     def supports(self, file_extension: str) -> bool:
         """Check if extension is supported."""

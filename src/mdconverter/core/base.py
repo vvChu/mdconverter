@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class ConversionTool(str, Enum):
@@ -34,21 +34,21 @@ class ConversionResult:
     """Result of a document conversion operation."""
 
     source_path: Path
-    output_path: Optional[Path] = None
+    output_path: Path | None = None
     status: ConversionStatus = ConversionStatus.SUCCESS
     tool_used: str = "unknown"
     content: str = ""
     quality_score: int = 0
     duration_seconds: float = 0.0
-    error_message: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    error_message: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_success(self) -> bool:
         """Check if conversion was successful."""
         return self.status == ConversionStatus.SUCCESS
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "source": str(self.source_path),
@@ -64,7 +64,7 @@ class ConversionResult:
 class BaseConverter(ABC):
     """Abstract base class for all document converters."""
 
-    def __init__(self, output_dir: Optional[Path] = None) -> None:
+    def __init__(self, output_dir: Path | None = None) -> None:
         """Initialize converter with optional output directory."""
         self.output_dir = output_dir
         if self.output_dir:

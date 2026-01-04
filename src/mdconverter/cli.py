@@ -5,7 +5,6 @@ Provides commands for converting, validating, and fixing Markdown documents.
 """
 
 from pathlib import Path
-from typing import List, Optional
 
 import typer
 from rich.console import Console
@@ -51,10 +50,10 @@ def main(
     pass
 
 
-def get_files_to_convert(path: Path, recursive: bool) -> List[Path]:
+def get_files_to_convert(path: Path, recursive: bool) -> list[Path]:
     """Get list of convertible files from path."""
     extensions = {".pdf", ".docx", ".doc", ".html", ".htm", ".pptx", ".xlsx"}
-    files: List[Path] = []
+    files: list[Path] = []
 
     if path.is_file():
         if path.suffix.lower() in extensions:
@@ -74,7 +73,7 @@ def convert(
         help="Input file or directory to convert.",
         exists=True,
     ),
-    output_dir: Optional[Path] = typer.Option(
+    output_dir: Path | None = typer.Option(
         None,
         "--output", "-o",
         help="Output directory. Defaults to same as input.",
@@ -113,7 +112,7 @@ def convert(
     from mdconverter.core.gemini import GeminiConverter
     from mdconverter.core.pandoc import PandocConverter
 
-    results: List[ConversionResult] = []
+    results: list[ConversionResult] = []
 
     with Progress(
         SpinnerColumn(),
@@ -166,7 +165,7 @@ def validate(
     from mdconverter.plugins.vn_legal.detector import is_legal_document
     from mdconverter.plugins.vn_legal.processor import VNLegalProcessor
 
-    files: List[Path] = []
+    files: list[Path] = []
     if target.is_file():
         files = [target]
     else:
@@ -190,7 +189,7 @@ def validate(
             continue
 
         # Check quality metrics
-        issues: List[str] = []
+        issues: list[str] = []
 
         if len(content) < settings.min_content_length:
             issues.append(f"Content too short ({len(content)} chars)")

@@ -5,7 +5,6 @@ Supports loading from environment variables and .env files.
 """
 
 from pathlib import Path
-from typing import List, Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -26,17 +25,17 @@ class Settings(BaseSettings):
         default="http://127.0.0.1:8045",
         description="Antigravity proxy URL for Gemini API access",
     )
-    llama_cloud_api_key: Optional[str] = Field(
+    llama_cloud_api_key: str | None = Field(
         default=None,
         description="LlamaCloud API key for LlamaParse",
     )
-    gemini_api_key: Optional[str] = Field(
+    gemini_api_key: str | None = Field(
         default=None,
         description="Gemini API key (if not using proxy)",
     )
 
     # Model Configuration
-    models: List[str] = Field(
+    models: list[str] = Field(
         default=[
             "gemini-3-flash",
             "gemini-2.5-flash",
@@ -65,7 +64,7 @@ class Settings(BaseSettings):
     enable_frontmatter: bool = Field(default=True, description="Add YAML frontmatter")
 
     # Paths
-    output_dir: Optional[Path] = Field(default=None, description="Default output directory")
+    output_dir: Path | None = Field(default=None, description="Default output directory")
 
 
 # Global settings instance
