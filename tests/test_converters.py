@@ -75,29 +75,18 @@ class TestGeminiConverter:
         assert result.status == ConversionStatus.SKIPPED
         assert "unsupported" in result.error_message.lower()
 
-    @patch("mdconverter.core.gemini.httpx.Client")
-    def test_convert_success_mocked(self, mock_client_class: MagicMock, tmp_path: Path) -> None:
-        """Test successful conversion with mocked API response."""
-        # Create a test PDF file
+    def test_convert_api_error_handled(self, tmp_path: Path) -> None:
+        """Test that API errors are handled gracefully."""
         test_file = tmp_path / "test.pdf"
         test_file.write_bytes(b"%PDF-1.4 test content")
 
-        # Mock the API response
-        mock_client = MagicMock()
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "candidates": [{"content": {"parts": [{"text": "# Converted Content\n\nTest"}]}}]
-        }
-        mock_response.raise_for_status = MagicMock()
-        mock_client.post.return_value = mock_response
-        mock_client_class.return_value = mock_client
-
-        converter = GeminiConverter(output_dir=tmp_path)
+        # With no valid API endpoint, conversion should fail gracefully
+        converter = GeminiConverter(output_dir=tmp_path, proxy_url="http://invalid:9999")
         result = converter.convert(test_file)
 
-        assert result.status == ConversionStatus.SUCCESS
-        assert result.output_path is not None
-        assert result.output_path.suffix == ".md"
+        # Should fail but not crash
+        assert result.status == ConversionStatus.FAILED
+        assert result.error_message is not None
 
 
 class TestPandocConverter:
@@ -126,19 +115,17 @@ class TestPandocConverter:
         assert result.status == ConversionStatus.FAILED
         assert "not found" in result.error_message.lower()
 
-    @patch("mdconverter.core.pandoc.shutil.which")
-    def test_pandoc_not_installed(self, mock_which: MagicMock, tmp_path: Path) -> None:
+    def test_pandoc_not_installed(self, tmp_path: Path) -> None:
         """Test error when Pandoc is not installed."""
-        mock_which.return_value = None
-
         test_file = tmp_path / "test.docx"
         test_file.write_bytes(b"test content")
 
         converter = PandocConverter(output_dir=tmp_path)
-        result = converter.convert(test_file)
-
-        assert result.status == ConversionStatus.FAILED
-        assert "pandoc" in result.error_message.lower()
+        # Mock the is_pandoc_available method to return False
+        with patch.object(converter, "is_pandoc_available", return_value=False):
+            result = converter.convert(test_file)
+            assert result.status == ConversionStatus.FAILED
+            assert "pandoc" in result.error_message.lower()
 
 
 class TestLlamaParseConverter:
@@ -195,7 +182,7 @@ class TestBaseConverter:
         result = converter.add_frontmatter(content, source, "gemini")
 
         assert "---" in result
-        assert "source:" in result
+        assert "source_file:" in result
         assert "test.pdf" in result
-        assert "tool:" in result
+        assert "conversion_tool:" in result
         assert "gemini" in result

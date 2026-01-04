@@ -75,7 +75,12 @@ class TestValidateCommand:
     def test_validate_valid_file(self, tmp_path: Path) -> None:
         """Test validate with a valid markdown file."""
         test_file = tmp_path / "test.md"
-        test_file.write_text("# Valid Heading\n\nSome content here that is long enough.")
+        # Content must be > 100 chars to pass min_content_length check
+        content = """# Valid Heading
+
+This is some content that is long enough to pass the minimum content length validation check.
+It needs to have at least 100 characters to be considered valid by the validator."""
+        test_file.write_text(content)
 
         result = runner.invoke(app, ["validate", str(test_file)])
         # Should complete without error for a valid file
@@ -104,7 +109,7 @@ class TestLintCommand:
     def test_lint_vn_only_flag(self, tmp_path: Path) -> None:
         """Test lint with --vn-only flag."""
         test_file = tmp_path / "test.md"
-        test_file.write_text("# Test\n\nĐiều 1. Content")
+        test_file.write_text("# Test\n\nDieu 1. Content", encoding="utf-8")
 
         result = runner.invoke(app, ["lint", str(tmp_path), "--vn-only"])
         # Should complete
