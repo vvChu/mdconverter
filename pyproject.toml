@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mdconverter"
+name = "mdconvert-cli"
 version = "1.0.0"
 description = "Modern document to Markdown converter with Vietnamese legal document support"
 readme = "README.md"

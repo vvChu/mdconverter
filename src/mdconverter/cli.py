@@ -5,13 +5,16 @@ Provides commands for converting, validating, and fixing Markdown documents.
 """
 
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import typer
 from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 from mdconverter import __version__
 from mdconverter.config import settings
+from mdconverter.core.base import ConversionResult, ConversionStatus
 
 app = typer.Typer(
     name="mdconvert",
@@ -48,6 +51,22 @@ def main(
     pass
 
 
+def get_files_to_convert(path: Path, recursive: bool) -> List[Path]:
+    """Get list of convertible files from path."""
+    extensions = {".pdf", ".docx", ".doc", ".html", ".htm", ".pptx", ".xlsx"}
+    files: List[Path] = []
+
+    if path.is_file():
+        if path.suffix.lower() in extensions:
+            files.append(path)
+    elif path.is_dir():
+        pattern = "**/*" if recursive else "*"
+        for ext in extensions:
+            files.extend(path.glob(f"{pattern}{ext}"))
+
+    return sorted(files)
+
+
 @app.command()
 def convert(
     input_path: Path = typer.Argument(
@@ -70,18 +89,64 @@ def convert(
         "--tool", "-t",
         help="Conversion tool: auto, gemini, pandoc, llamaparse.",
     ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Show what would be converted without actually converting.",
+    ),
 ) -> None:
     """Convert documents to Markdown."""
-    console.print(f"[bold]Converting:[/bold] {input_path}")
+    files = get_files_to_convert(input_path, recursive)
 
-    if input_path.is_file():
-        console.print(f"  Processing file: {input_path.name}")
-        # TODO: Implement conversion logic
-        console.print("[green]✓[/green] Conversion complete!")
-    elif input_path.is_dir():
-        console.print(f"  Scanning directory: {input_path}")
-        # TODO: Implement batch conversion
-        console.print("[green]✓[/green] Batch conversion complete!")
+    if not files:
+        console.print("[yellow]No convertible files found.[/yellow]")
+        raise typer.Exit(1)
+
+    console.print(f"[bold]Found {len(files)} file(s) to convert[/bold]")
+
+    if dry_run:
+        for f in files:
+            console.print(f"  [dim]Would convert:[/dim] {f}")
+        raise typer.Exit(0)
+
+    # Import converters
+    from mdconverter.core.gemini import GeminiConverter
+    from mdconverter.core.pandoc import PandocConverter
+
+    results: List[ConversionResult] = []
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Converting...", total=len(files))
+
+        for file in files:
+            progress.update(task, description=f"Converting {file.name}...")
+
+            # Auto-select converter based on file type and tool preference
+            if tool == "pandoc" or (tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}):
+                converter = PandocConverter(output_dir)
+            else:
+                converter = GeminiConverter(output_dir)
+
+            result = converter.convert(file)
+            results.append(result)
+
+            if result.is_success:
+                console.print(f"  [green]✓[/green] {file.name} → {result.output_path.name if result.output_path else 'done'}")
+            else:
+                console.print(f"  [red]✗[/red] {file.name}: {result.error_message}")
+
+            progress.advance(task)
+
+    # Summary
+    success = sum(1 for r in results if r.status == ConversionStatus.SUCCESS)
+    failed = sum(1 for r in results if r.status == ConversionStatus.FAILED)
+
+    console.print()
+    console.print(f"[bold]Summary:[/bold] {success} success, {failed} failed")
 
 
 @app.command()
@@ -98,9 +163,73 @@ def validate(
     ),
 ) -> None:
     """Validate Markdown files for quality and structure."""
-    console.print(f"[bold]Validating:[/bold] {target}")
-    # TODO: Implement validation logic
-    console.print("[green]✓[/green] Validation complete!")
+    from mdconverter.plugins.vn_legal.detector import is_legal_document
+    from mdconverter.plugins.vn_legal.processor import VNLegalProcessor
+
+    files: List[Path] = []
+    if target.is_file():
+        files = [target]
+    else:
+        files = list(target.rglob("*.md"))
+
+    if not files:
+        console.print("[yellow]No Markdown files found.[/yellow]")
+        raise typer.Exit(1)
+
+    console.print(f"[bold]Validating {len(files)} file(s)...[/bold]")
+
+    issues_found = 0
+    files_fixed = 0
+
+    for file in files:
+        try:
+            content = file.read_text(encoding="utf-8")
+        except Exception as e:
+            console.print(f"  [red]✗[/red] {file.name}: Cannot read file - {e}")
+            issues_found += 1
+            continue
+
+        # Check quality metrics
+        issues: List[str] = []
+
+        if len(content) < settings.min_content_length:
+            issues.append(f"Content too short ({len(content)} chars)")
+
+        if not content.strip():
+            issues.append("Empty file")
+
+        if "# " not in content:
+            issues.append("Missing main heading")
+
+        # VN Legal specific checks
+        if is_legal_document(content):
+            processor = VNLegalProcessor()
+            if fix:
+                new_content = processor.process(content)
+                if new_content != content:
+                    file.write_text(new_content, encoding="utf-8")
+                    files_fixed += 1
+                    fixes = processor.get_fix_summary()
+                    console.print(f"  [green]✓[/green] {file.name}: Fixed {sum(fixes.values())} issues")
+                else:
+                    console.print(f"  [green]✓[/green] {file.name}: OK (VN Legal Doc)")
+            else:
+                console.print(f"  [dim]ℹ[/dim] {file.name}: VN Legal document detected")
+
+        elif issues:
+            issues_found += 1
+            console.print(f"  [yellow]⚠[/yellow] {file.name}: {', '.join(issues)}")
+        else:
+            console.print(f"  [green]✓[/green] {file.name}: OK")
+
+    console.print()
+    if fix and files_fixed > 0:
+        console.print(f"[bold]Fixed {files_fixed} file(s)[/bold]")
+    if issues_found > 0:
+        console.print(f"[yellow]Found {issues_found} file(s) with issues[/yellow]")
+        raise typer.Exit(1)
+    else:
+        console.print("[green]All files OK![/green]")
 
 
 @app.command()
@@ -114,11 +243,45 @@ def lint(
         "--fix", "-f",
         help="Automatically fix lint issues.",
     ),
+    vn_only: bool = typer.Option(
+        False,
+        "--vn-only",
+        help="Only run Vietnamese legal document checks.",
+    ),
 ) -> None:
     """Lint Markdown files using PyMarkdown and VN Legal rules."""
+    from mdconverter.plugins.vn_legal.linter import VNLegalLinter
+
     console.print(f"[bold]Linting:[/bold] {target}")
-    # TODO: Implement linting logic
-    console.print("[green]✓[/green] Linting complete!")
+
+    # VN Legal Lint
+    linter = VNLegalLinter()
+    if target.is_file():
+        issues = linter.lint_file(target)
+    else:
+        issues = linter.lint_directory(target)
+
+    if issues:
+        # Group by file
+        table = Table(title="Vietnamese Legal Document Issues")
+        table.add_column("File", style="cyan")
+        table.add_column("Line", style="yellow")
+        table.add_column("Rule", style="magenta")
+        table.add_column("Message", style="white")
+
+        for issue in issues:
+            table.add_row(
+                issue.file.name,
+                str(issue.line),
+                issue.rule_id,
+                issue.message,
+            )
+
+        console.print(table)
+        console.print(f"\n[yellow]Found {len(issues)} issue(s)[/yellow]")
+        raise typer.Exit(1)
+    else:
+        console.print("[green]✓[/green] No issues found!")
 
 
 @app.command()
@@ -130,11 +293,19 @@ def config(
     ),
 ) -> None:
     """Show or modify configuration."""
-    console.print("[bold]Current Configuration:[/bold]")
-    console.print(f"  Proxy: {settings.antigravity_proxy}")
-    console.print(f"  Models: {', '.join(settings.models)}")
-    console.print(f"  Max Tokens: {settings.max_output_tokens}")
-    console.print(f"  Timeout: {settings.timeout_seconds}s")
+    table = Table(title="Current Configuration")
+    table.add_column("Setting", style="cyan")
+    table.add_column("Value", style="green")
+
+    table.add_row("Proxy URL", settings.antigravity_proxy)
+    table.add_row("Models", ", ".join(settings.models))
+    table.add_row("Max Tokens", str(settings.max_output_tokens))
+    table.add_row("Timeout", f"{settings.timeout_seconds}s")
+    table.add_row("Temperature", str(settings.temperature))
+    table.add_row("Min Content Length", str(settings.min_content_length))
+    table.add_row("Quality Threshold", str(settings.high_quality_threshold))
+
+    console.print(table)
 
 
 if __name__ == "__main__":
