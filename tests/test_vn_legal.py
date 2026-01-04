@@ -1,6 +1,5 @@
 """Tests for VN Legal detector."""
 
-
 from mdconverter.plugins.vn_legal.detector import get_document_type, is_legal_document
 
 

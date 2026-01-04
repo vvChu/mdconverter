@@ -75,17 +75,20 @@ def convert(
     ),
     output_dir: Path | None = typer.Option(
         None,
-        "--output", "-o",
+        "--output",
+        "-o",
         help="Output directory. Defaults to same as input.",
     ),
     recursive: bool = typer.Option(
         False,
-        "--recursive", "-r",
+        "--recursive",
+        "-r",
         help="Recursively process directories.",
     ),
     tool: str = typer.Option(
         "auto",
-        "--tool", "-t",
+        "--tool",
+        "-t",
         help="Conversion tool: auto, gemini, pandoc, llamaparse.",
     ),
     dry_run: bool = typer.Option(
@@ -125,7 +128,9 @@ def convert(
             progress.update(task, description=f"Converting {file.name}...")
 
             # Auto-select converter based on file type and tool preference
-            if tool == "pandoc" or (tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}):
+            if tool == "pandoc" or (
+                tool == "auto" and file.suffix.lower() in {".docx", ".html", ".htm"}
+            ):
                 converter = PandocConverter(output_dir)
             else:
                 converter = GeminiConverter(output_dir)
@@ -134,7 +139,9 @@ def convert(
             results.append(result)
 
             if result.is_success:
-                console.print(f"  [green]✓[/green] {file.name} → {result.output_path.name if result.output_path else 'done'}")
+                console.print(
+                    f"  [green]✓[/green] {file.name} → {result.output_path.name if result.output_path else 'done'}"
+                )
             else:
                 console.print(f"  [red]✗[/red] {file.name}: {result.error_message}")
 
@@ -157,7 +164,8 @@ def validate(
     ),
     fix: bool = typer.Option(
         False,
-        "--fix", "-f",
+        "--fix",
+        "-f",
         help="Automatically fix issues where possible.",
     ),
 ) -> None:
@@ -209,7 +217,9 @@ def validate(
                     file.write_text(new_content, encoding="utf-8")
                     files_fixed += 1
                     fixes = processor.get_fix_summary()
-                    console.print(f"  [green]✓[/green] {file.name}: Fixed {sum(fixes.values())} issues")
+                    console.print(
+                        f"  [green]✓[/green] {file.name}: Fixed {sum(fixes.values())} issues"
+                    )
                 else:
                     console.print(f"  [green]✓[/green] {file.name}: OK (VN Legal Doc)")
             else:
@@ -239,7 +249,8 @@ def lint(
     ),
     fix: bool = typer.Option(
         False,
-        "--fix", "-f",
+        "--fix",
+        "-f",
         help="Automatically fix lint issues.",
     ),
     vn_only: bool = typer.Option(
@@ -287,7 +298,8 @@ def lint(
 def config(
     show: bool = typer.Option(
         True,
-        "--show", "-s",
+        "--show",
+        "-s",
         help="Show current configuration.",
     ),
 ) -> None:

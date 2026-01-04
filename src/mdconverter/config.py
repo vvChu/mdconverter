@@ -58,9 +58,7 @@ class Settings(BaseSettings):
     high_quality_threshold: int = Field(default=95, description="Quality score threshold")
 
     # Processing Settings
-    pdf_max_pages_single_pass: int = Field(
-        default=20, description="Max pages before chunking"
-    )
+    pdf_max_pages_single_pass: int = Field(default=20, description="Max pages before chunking")
     enable_frontmatter: bool = Field(default=True, description="Add YAML frontmatter")
 
     # Paths

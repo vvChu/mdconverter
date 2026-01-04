@@ -14,6 +14,7 @@ from typing import Any
 
 class ConversionTool(str, Enum):
     """Available conversion tools."""
+
     GEMINI = "gemini"
     PANDOC = "pandoc"
     LLAMAPARSE = "llamaparse"
@@ -23,6 +24,7 @@ class ConversionTool(str, Enum):
 
 class ConversionStatus(str, Enum):
     """Status of a conversion operation."""
+
     SUCCESS = "success"
     FAILED = "failed"
     SKIPPED = "skipped"
@@ -112,7 +114,7 @@ class BaseConverter(ABC):
         frontmatter = f"""---
 title: "{source_path.stem}"
 type: "Document"
-date: "{datetime.now().strftime('%Y-%m-%d')}"
+date: "{datetime.now().strftime("%Y-%m-%d")}"
 status: "converted"
 source_file: "{source_path.name}"
 conversion_tool: "{tool}"
