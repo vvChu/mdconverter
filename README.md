@@ -59,7 +59,7 @@ MDCONVERT_MAX_OUTPUT_TOKENS=65536
 
 ## Project Structure
 
-```
+```txt
 MarkDownConvertor/
 ├── src/
 │   └── mdconverter/
@@ -100,12 +100,12 @@ pre-commit install
 
 ## Vietnamese Legal Document Rules
 
-| Rule | Description |
-|------|-------------|
-| VN001 | Merged list items (a, b, c on same line) |
-| VN002 | Suspicious numbering reset |
-| VN003 | Missing blank line before Điều headers |
-| VN004 | Incorrect Điểm format |
+| Rule  | Description                                |
+| ----- | ------------------------------------------ |
+| VN001 | Merged list items (a, b, c on same line)   |
+| VN002 | Suspicious numbering reset                 |
+| VN003 | Missing blank line before Điều headers     |
+| VN004 | Incorrect Điểm format                      |
 
 ## License
 
