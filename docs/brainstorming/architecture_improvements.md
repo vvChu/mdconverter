@@ -391,4 +391,47 @@ Dựa trên decisions trên, recommended implementation order:
 
 ---
 
+## ⚠️ Common Pitfalls & Important Notes
+
+> [!CAUTION]
+> **MUST READ before implementing any changes!**
+
+### Development Setup
+
+- ✅ **ALWAYS** install with `[dev,llm]` extras: `pip install -e ".[dev,llm]"`
+- ✅ **ALWAYS** run tests before creating a PR - CI will fail if tests fail
+- ✅ **ALWAYS** run `ruff check` and `ruff format` - CI will fail if formatting is wrong
+
+### Branch Protection
+
+- ❌ **DO NOT** push directly to `main` - branch protection will reject it
+- ❌ **DO NOT** skip type hints - MyPy strict mode will fail
+
+### Environment & Configuration
+
+- 🔧 Environment variables use `MDCONVERT_` prefix (case-insensitive)
+- 🔧 Package installed as editable (`-e` flag) - source changes take effect immediately
+
+### Architecture Notes
+
+| Converter | Sync/Async | Notes |
+|-----------|------------|-------|
+| Pandoc | **Sync** | Wrapped in async for CLI |
+| Gemini/LLM | **Async** | Native async |
+| LlamaParse | **Async** | Native async |
+
+### File Handling
+
+- **Output paths**: Default = same directory as input. Use `--output/-o` to override
+- **Supported extensions**: `.pdf`, `.docx`, `.doc`, `.html`, `.htm`, `.pptx`, `.xlsx`
+
+### CLI Async Pattern
+
+```python
+# CLI handles both sync and async converters with asyncio.run()
+asyncio.run(process_files())
+```
+
+---
+
 > ✅ *Brainstorming complete. Ready to create implementation_plan.md when approved.*
