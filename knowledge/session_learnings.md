@@ -1,6 +1,10 @@
 ## Session Learnings - Kiến thức tích lũy
 
-## Cập nhật gần nhất: 2026-01-06
+## Cập nhật gần nhất: 2026-01-07
+
+### Tình trạng Custom Instructions
+
+- Không cần regenerate custom instructions cho repository này tại 2026-01-07; nội dung hiện tại vẫn phù hợp.
 
 ---
 
